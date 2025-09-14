@@ -33,7 +33,11 @@ export default function RegisterPage() {
     const onSubmit = async (values) => {
         try {
             const res = await axios.post("/api/auth/register", values)
-            if (res.status === 200) router.push("/auth/login")
+            if (res.status === 200) {
+                // router.push("/auth/login")
+                console.log(res);
+                
+            }
         } catch (error) {
             console.log(error);
 

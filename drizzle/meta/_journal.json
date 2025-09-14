@@ -8,6 +8,20 @@
       "when": 1756403120353,
       "tag": "0000_sour_gravity",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1757750349099,
+      "tag": "0001_aspiring_morbius",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1757844189554,
+      "tag": "0002_aromatic_puff_adder",
+      "breakpoints": true
     }
   ]
 }
