@@ -1,10 +1,10 @@
-import bcryptjs from 'bcryptjs'
+import bcrypt from 'bcryptjs'
 
 export async function hashPassword(password) {
     try {
         const saltRounds = 12
         const hashedPassword = await bcrypt.hash(password, saltRounds)
-        return hashPassword
+        return hashedPassword
     } catch (error) {
         console.error('Password hashing error:', error)
         throw new Error('Password hashing failed')
@@ -13,7 +13,7 @@ export async function hashPassword(password) {
 
 export async function comparePassword(password, hashedPassword) {
     try {
-        const isMatch = await bcrypt.compare(password, hashPassword)
+        const isMatch = await bcrypt.compare(password, hashedPassword)
         return isMatch
     } catch (error) {
         console.error('Password comparison error:', error)

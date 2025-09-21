@@ -7,8 +7,8 @@ export const registerSchema = z.object({
         .regex(/^[a-zA-Z\s]+$/, "Name can only contain letters and spaces"),
 
     email: z.string()
-        .email("Please enter a valid email address")
-        .max("Email must be less than 100 characters"),
+        .min(1, "Email is required")
+        .email("Please enter a valid email address"),
 
     password: z.string()
         .min(8, "Password must be at least 8 characters")
