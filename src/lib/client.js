@@ -9,12 +9,12 @@ export const apiClient = axios.create({
     },
 })
 
-apiClient.interceptors.response.use(
+apiClient.interceptors.request.use(
     (config) => {
         return config;
     },
     (error) => {
-        Promise.reject(error)
+        return Promise.reject(error)
     }
 )
 

@@ -1,5 +1,6 @@
 import { pool } from '@/config/db'
 import { comparePassword, hashPassword } from '@/lib/auth/password'
+import { TokenService } from '@/lib/auth/token';
 
 export class AuthService {
   static async register(userData) {
@@ -23,10 +24,22 @@ export class AuthService {
         [userData.name, userData.email, hashedPassword, 'user', false]
       );
 
+      const user = result.rows[0];
+      const tokenPayload = {
+        userId: user.id,
+        email: user.email,
+        role: user.role
+      }
+
+      const accessToken = TokenService.generateAccessToken(tokenPayload)
+      const refreshToken = TokenService.generateRefreshToken(tokenPayload)
 
       return {
         success: true,
-        user: result.rows[0],
+        // user: result.rows[0],
+        user: user,
+        accessToken,
+        refreshToken,
         message: 'User registered successfully'
       };
 
@@ -52,12 +65,24 @@ export class AuthService {
       const isValidPassword = await comparePassword(password, user.password)
       if (!isValidPassword) throw new Error('Invalid email or password')
 
+      const tokenPayload = {
+        userId: user.id,
+        email: user.email,
+        role: user.role
+      }
+
+      const accessToken = TokenService.generateAccessToken(tokenPayload);
+      const refreshToken = TokenService.generateRefreshToken(tokenPayload);
+
       const { password: _, ...userWithoutPassword } = user;
+
       return {
         success: true,
         user: userWithoutPassword,
+        accessToken,
+        refreshToken,
         message: 'Login successful'
-      };
+      }
     } catch (error) {
       console.error("❌ AuthService - Login error:", error);
       throw error;
