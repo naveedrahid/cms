@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { corsMiddleware } from "./middleware/cors";
+import { rateLimitMiddleware } from "./middleware/rate-limit";
 
-export function middleware(request){
-    if (request.nextUrl.pathname.startsWith('/api/')) {
+export function middleware(request) {
+    if (request.nextUrl.pathname.startsWith("/api/")) {
+        const rateLimitResponse = rateLimitMiddleware(request);
+        if (rateLimitResponse) {
+            return rateLimitResponse;
+        }
         return corsMiddleware(request);
     }
 
@@ -10,5 +15,5 @@ export function middleware(request){
 }
 
 export const config = {
-    matcher: '/api/:path*',
+    matcher: "/api/:path*",
 };
