@@ -2,7 +2,7 @@ import { pool } from '@/config/db'
 import { comparePassword, hashPassword } from '@/lib/auth/password'
 import { TokenService } from '@/lib/auth/token';
 
-export class AuthService {
+class AuthService {
   static async register(userData) {
     const client = await pool.connect();
     try {
@@ -91,3 +91,5 @@ export class AuthService {
     }
   }
 }
+
+export default AuthService

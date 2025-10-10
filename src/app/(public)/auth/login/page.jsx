@@ -1,5 +1,4 @@
 "use client"
-import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,11 +10,12 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Loader2 } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
+import { useState } from "react"
 
 export default function LoginPage() {
     const router = useRouter()
     const [error, setError] = useState('')
-    const {login, isLoading} = useAuth()
+    const { login, isLoading, csrfReady } = useAuth()
 
     const {
         register,
@@ -30,6 +30,10 @@ export default function LoginPage() {
     })
 
     const onSubmit = async (data) => {
+        if (!csrfReady) {
+            setError('Security not initialized. Please wait...')
+            return
+        }
         setError('')
 
         try {
@@ -50,7 +54,16 @@ export default function LoginPage() {
             // console.log("Login successful:", result.user)
             // router.push("/dashboard")
         } catch (error) {
-            setError(error.message)
+            if (error.message.includes('CSRF') || error.message.includes('token')) {
+                try {
+                    await CSRFClient.getCSRFToken()
+                    setError('Security token refreshed. Please try again.')
+                } catch {
+                    setError('Security error. Please refresh the page.')
+                }
+            } else {
+                setError(error.message)
+            }
         }
     }
 
@@ -65,6 +78,12 @@ export default function LoginPage() {
                     {error && (
                         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md text-sm">
                             {error}
+                        </div>
+                    )}
+
+                    {!csrfReady && !error && (
+                        <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-md text-sm">
+                            Initializing security...
                         </div>
                     )}
 
