@@ -1,31 +1,27 @@
-// middleware.js
 import { NextResponse } from 'next/server'
-import { corsMiddleware } from '@/middleware/cors'
-import { rateLimitMiddleware } from '@/middleware/rate-limit'
-import { securityHeadersMiddleware } from './middleware/security-headers'
-import { authMiddleware } from './middleware/auth'
 
 export function middleware(request) {
-  const securityResponse = securityHeadersMiddleware(request)
-  if (securityResponse) return securityResponse
+  const { pathname } = request.nextUrl
+  
+  const publicPaths = ['/auth/login', '/auth/register', '/api/auth/login', '/api/auth/register']
+  
+  if (publicPaths.some(path => pathname.startsWith(path))) {
+    return NextResponse.next();
+  }
 
-  const corsResponse = corsMiddleware(request)
-  if (corsResponse) return corsResponse
-
-  const rateLimitResponse = rateLimitMiddleware(request)
-  if (rateLimitResponse) return rateLimitResponse
-
-  const authResponse = authMiddleware(request)
-  if (authResponse) return authResponse
+  const sessionToken = request.cookies.get('session_token')?.value
+  
+  if (!sessionToken && pathname.startsWith('/dashboard')) {
+    return NextResponse.redirect(
+      new URL('/auth/login?message=Please login first', request.url)
+    )
+  }
 
   return NextResponse.next()
 }
 
 export const config = {
   matcher: [
-    '/api/:path*',
-    '/dashboard/:path*',
-    '/auth/:path*',
-    '/((?!_next/static|_next/image|favicon.ico|public).*)'
+    '/dashboard/:path*'
   ]
 }

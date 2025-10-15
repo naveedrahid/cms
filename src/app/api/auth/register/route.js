@@ -1,39 +1,22 @@
-import { SecureCookieService } from "@/lib/auth/cookies"
-import { RequestHandler } from "@/lib/request-handler"
 import { registerSchema } from "@/lib/validations/auth.schema"
 import AuthService from "@/services/auth.service"
 import { NextResponse } from "next/server"
 
 
-async function registerHandler(request) {
+export async function POST(request) {
   try {
-    const contentTypeError = RequestHandler.validateContentType(request)
-    if (contentTypeError) return contentTypeError
-
-    const bodySizeError = RequestHandler.checkBodySize(request, 1)
-    if (bodySizeError) return bodySizeError
-
-    if (request.method === 'POST') {
-      const isCSRFValid = SecureCookieService.validateCSRFToken(request)
-      if (!isCSRFValid) {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: 'Invalid CSRF token'
-          }),
-          { status: 403 }
-        )
-      }
-    }
-
-    const body = await request.json();
+    const body = await request.json()
     const validatedData = registerSchema.parse(body)
     const result = await AuthService.register(validatedData)
 
-    const response = NextResponse.json(result, { status: 201 })
-    SecureCookieService.setAuthCookies(response, result.accessToken, result.refreshToken)
+    if (!result.success) {
+      return NextResponse.json({
+        status: false,
+        message: result.message || 'Registration failed'
+      }, { status: 400 })
+    }
 
-    return response
+    return NextResponse.json(result, { status: 201 })
   } catch (error) {
     console.error("Register API error:", error);
 
@@ -63,16 +46,4 @@ async function registerHandler(request) {
       { status: 500 }
     )
   }
-}
-
-export const POST = RequestHandler.withTimeout(registerHandler, 15000)
-
-export const OPTIONS = async () => {
-  return new Response(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-CSRF-Token'
-    }
-  });
 }

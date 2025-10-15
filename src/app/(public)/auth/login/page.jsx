@@ -6,16 +6,26 @@ import { Input } from "@/components/ui/input"
 import { loginSchema } from "@/lib/validations/auth.schema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Label } from "@radix-ui/react-label"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Loader2 } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 export default function LoginPage() {
     const router = useRouter()
+    const searchParams = useSearchParams()
     const [error, setError] = useState('')
-    const { login, isLoading, csrfReady } = useAuth()
+    const [isLoading, setIsLoading] = useState(false)
+
+    const message = searchParams.get('message')
+    const redirect = searchParams.get('redirect') || '/dashboard'
+
+    useEffect(() => {
+        if (message) {
+            setError(message)
+        }
+    }, [message])
 
     const {
         register,
@@ -30,40 +40,28 @@ export default function LoginPage() {
     })
 
     const onSubmit = async (data) => {
-        if (!csrfReady) {
-            setError('Security not initialized. Please wait...')
-            return
-        }
+        setIsLoading(true)
         setError('')
-
         try {
-            const result = await login(data.email, data.password)
-            // const response = await fetch('/api/auth/login', {
-            //     method: 'POST',
-            //     headers: {
-            //         "Content-Type": "application/json",
-            //     },
-            //     body: JSON.stringify(data),
-            // })
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+            })
 
-            // const result = await response.json()
+            const result = await response.json()
 
-            // if (!response.ok) {
-            //     throw new Error(result.error || "Login failed")
-            // }
-            // console.log("Login successful:", result.user)
-            // router.push("/dashboard")
-        } catch (error) {
-            if (error.message.includes('CSRF') || error.message.includes('token')) {
-                try {
-                    await CSRFClient.getCSRFToken()
-                    setError('Security token refreshed. Please try again.')
-                } catch {
-                    setError('Security error. Please refresh the page.')
-                }
-            } else {
-                setError(error.message)
+            if (!response.ok) {
+                throw new Error(result.message || result.error || "Login failed")
             }
+
+            router.push(redirect)
+        } catch (error) {
+            setError(error.message)
+        } finally {
+            setIsLoading(false) // ✅ Add this
         }
     }
 
@@ -75,15 +73,15 @@ export default function LoginPage() {
                 </CardHeader>
 
                 <CardContent className="space-y-4">
+                    {/* Success Message (agar register se aaye hain) */}
+                    {searchParams.get('message')?.includes('successful') && (
+                        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-md text-sm">
+                            {searchParams.get('message')}
+                        </div>
+                    )}
                     {error && (
                         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md text-sm">
                             {error}
-                        </div>
-                    )}
-
-                    {!csrfReady && !error && (
-                        <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-md text-sm">
-                            Initializing security...
                         </div>
                     )}
 

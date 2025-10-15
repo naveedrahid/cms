@@ -16,14 +16,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { registerSchema } from "@/lib/validations/auth.schema";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import CSRFClient from "@/lib/csrf-client";
 
 export default function RegisterPage() {
     const router = useRouter();
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const { csrfReady } = useAuth()
 
     const {
         register,
@@ -39,16 +36,15 @@ export default function RegisterPage() {
     })
 
     const onSubmit = async (data) => {
-        if (!csrfReady) {
-            setError("Security not initialized. Please wait...")
-            return;
-        }
         setIsLoading(true)
         setError("")
 
         try {
-            const response = await CSRFClient.fetchWithCSRF("/api/auth/register", {
+            const response = await fetch("/api/auth/register", {
                 method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
                 body: JSON.stringify(data)
             });
 
@@ -57,11 +53,14 @@ export default function RegisterPage() {
                 throw new Error(result.error || "Registration failed")
             }
 
-            router.push("/auth/login?message=Registration successful. Please login.");
+            router.push("/auth/login");
         } catch (error) {
             setError(error.message);
+        } finally {
+            setIsLoading(false);
         }
     }
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
             <Card className="w-full max-w-md">
