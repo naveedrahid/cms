@@ -6,26 +6,39 @@ import { Input } from "@/components/ui/input"
 import { loginSchema } from "@/lib/validations/auth.schema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Label } from "@radix-ui/react-label"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Loader2 } from "lucide-react"
-import { useAuth } from "@/hooks/useAuth"
 import { useEffect, useState } from "react"
 
 export default function LoginPage() {
     const router = useRouter()
-    const searchParams = useSearchParams()
     const [error, setError] = useState('')
     const [isLoading, setIsLoading] = useState(false)
-
-    const message = searchParams.get('message')
-    const redirect = searchParams.get('redirect') || '/dashboard'
+    const [searchParams, setSearchParams] = useState({})
+    const [redirect, setRedirect] = useState('/dashboard')
 
     useEffect(() => {
-        if (message) {
-            setError(message)
+        // Sirf client side pe hi run karo
+        if (typeof window !== 'undefined') {
+            const urlParams = new URLSearchParams(window.location.search)
+            const params = {}
+            for (const [key, value] of urlParams.entries()) {
+                params[key] = value
+            }
+            setSearchParams(params)
+            
+            // Redirect set karo
+            if (params.redirect) {
+                setRedirect(params.redirect)
+            }
+            
+            // Message set karo
+            if (params.message) {
+                setError(params.message)
+            }
         }
-    }, [message])
+    }, [])
 
     const {
         register,
@@ -56,12 +69,12 @@ export default function LoginPage() {
             if (!response.ok) {
                 throw new Error(result.message || result.error || "Login failed")
             }
-
+            router.refresh()
             router.push(redirect)
         } catch (error) {
-            setError(error.message)
+            setError(error instanceof Error ? error.message : "An error occurred")
         } finally {
-            setIsLoading(false) // ✅ Add this
+            setIsLoading(false)
         }
     }
 
@@ -73,10 +86,9 @@ export default function LoginPage() {
                 </CardHeader>
 
                 <CardContent className="space-y-4">
-                    {/* Success Message (agar register se aaye hain) */}
-                    {searchParams.get('message')?.includes('successful') && (
+                    {searchParams.message?.includes('successful') && (
                         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-md text-sm">
-                            {searchParams.get('message')}
+                            {searchParams.message}
                         </div>
                     )}
                     {error && (
