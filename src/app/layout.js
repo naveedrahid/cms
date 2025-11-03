@@ -11,7 +11,7 @@ const inter = Inter({
 
 export const metadata = {
   title: 'Your App',
-  description: 'Your app description',
+  description: 'Your  app description',
 }
 
 export default function RootLayout({ children }) {
